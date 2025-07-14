@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Analytics Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.18.0/plotly.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            transform: scale(1.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+        }
+
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-preview {
+            max-height: 400px;
+            overflow: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .user-card:hover {
+            transform: scale(1.02);
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .admin-panel {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Excel Analytics Platform</h1>
+            <p>Upload, Analyze, Visualize - Transform your Excel data into powerful insights</p>
+            
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('upload')">📤 Upload & Analyze</button>
+                <button class="tab-btn" onclick="switchTab('dashboard')">📈 Dashboard</button>
+                <button class="tab-btn" onclick="switchTab('history')">📋 History</button>
+                <button class="tab-btn" onclick="switchTab('admin')">⚙️ Admin Panel</button>
+            </div>
+        </div>
+
+        <!-- Upload & Analyze Tab -->
+        <div id="upload" class="tab-content active">
+            <div class="card">
+                <h2>📁 Upload Excel File</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div style="font-size: 3em; margin-bottom: 20px;">📊</div>
+                    <h3>Drag & Drop your Excel file here</h3>
+                    <p>or click to browse (.xls, .xlsx supported)</p>
+                    <input type="file" id="fileInput" class="file-input" accept=".xls,.xlsx" multiple>
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        Choose Files
+                    </button>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing your Excel file...</p>
+            </div>
+
+            <div class="card" id="dataPreview" style="display: none;">
+                <h2>📋 Data Preview</h2>
+                <div id="previewContent"></div>
+            </div>
+
+            <div class="card" id="chartControls" style="display: none;">
+                <h2>📊 Chart Configuration</h2>
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="xAxis">X-Axis Column:</label>
+                        <select id="xAxis" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="yAxis">Y-Axis Column:</label>
+                        <select id="yAxis" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="chartType">Chart Type:</label>
+                        <select id="chartType" class="form-control">
+                            <option value="line">Line Chart</option>
+                            <option value="bar">Bar Chart</option>
+                            <option value="scatter">Scatter Plot</option>
+                            <option value="pie">Pie Chart</option>
+                            <option value="area">Area Chart</option>
+                            <option value="3d-scatter">3D Scatter Plot</option>
+                            <option value="3d-surface">3D Surface Plot</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="generateChart()">🎨 Generate Chart</button>
+                <button class="btn btn-secondary" onclick="generateAIInsights()">🤖 Get AI Insights</button>
+            </div>
+
+            <div class="card" id="chartDisplay" style="display: none;">
+                <h2>📈 Generated Chart</h2>
+                <div class="chart-container">
+                    <canvas id="myChart"></canvas>
+                    <div id="plotlyChart"></div>
+                </div>
+                <button class="btn btn-primary" onclick="downloadChart()">💾 Download Chart</button>
+                <button class="btn btn-secondary" onclick="saveAnalysis()">💿 Save Analysis</button>
+            </div>
+
+            <div class="insight-card" id="aiInsights" style="display: none;">
+                <h2>🤖 AI-Powered Insights</h2>
+                <div id="insightsContent"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+            <div class="card">
+                <h2>📊 Analytics Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalFiles">0</div>
+                        <div>Files Uploaded</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCharts">0</div>
+                        <div>Charts Generated</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalRows">0</div>
+                        <div>Data Rows Processed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalInsights">0</div>
+                        <div>AI Insights Generated</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📈 Recent Activity</h2>
+                <div id="recentActivity"></div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <h2>📋 Upload History</h2>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <!-- Admin Panel Tab -->
+        <div id="admin" class="tab-content">
+            <div class="card admin-panel">
+                <h2>⚙️ Admin Panel</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">1</div>
+                        <div>Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalStorage">0</div>
+                        <div>Storage Used (MB)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="activeUsers">1</div>
+                        <div>Active Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="apiCalls">0</div>
+                        <div>API Calls Today</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>👥 User Management</h2>
+                <div id="usersList">
+                    <div class="user-card">
+                        <div>
+                            <strong>Current User</strong><br>
+                            <small>user@example.com</small>
+                        </div>
+                        <div>
+                            <span class="btn btn-success">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentData = [];
+        let currentChart = null;
+        let uploadHistory = JSON.parse(localStorage.getItem('uploadHistory') || '[]');
+        let analytics = JSON.parse(localStorage.getItem('analytics') || '{"files": 0, "charts": 0, "rows": 0, "insights": 0}');
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            updateDashboard();
+            updateHistory();
+        });
+
+        function setupEventListeners() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            // File input change
+            fileInput.addEventListener('change', handleFileSelect);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            processFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            processFiles(files);
+        }
+
+        function processFiles(files) {
+            if (files.length === 0) return;
+
+            document.getElementById('loading').style.display = 'block';
+            
+            Array.from(files).forEach(file => {
+                if (file.type.includes('sheet') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    readExcelFile(file);
+                } else {
+                    alert('Please upload only Excel files (.xls, .xlsx)');
+                }
+            });
+        }
+
+        function readExcelFile(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    currentData = jsonData;
+                    displayDataPreview(jsonData, file.name);
+                    setupChartControls(jsonData);
+                    
+                    // Save to history
+                    const historyEntry = {
+                        id: Date.now(),
+                        fileName: file.name,
+                        uploadDate: new Date().toISOString(),
+                        rowCount: jsonData.length,
+                        columns: Object.keys(jsonData[0] || {})
+                    };
+                    
+                    uploadHistory.unshift(historyEntry);
+                    localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
+                    
+                    // Update analytics
+                    analytics.files++;
+                    analytics.rows += jsonData.length;
+                    localStorage.setItem('analytics', JSON.stringify(analytics));
+                    
+                    updateDashboard();
+                    updateHistory();
+                    
+                } catch (error) {
+                    alert('Error reading Excel file: ' + error.message);
+                } finally {
+                    document.getElementById('loading').style.display = 'none';
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function displayDataPreview(data, fileName) {
+            const previewDiv = document.getElementById('previewContent');
+            const preview = document.getElementById('dataPreview');
+            
+            if (data.length === 0) {
+                previewDiv.innerHTML = '<p>No data found in the file.</p>';
+                preview.style.display = 'block';
+                return;
+            }
+
+            const columns = Object.keys(data[0]);
+            const previewData = data.slice(0, 10); // Show first 10 rows
+
+            let html = `
+                <h3>📁 ${fileName}</h3>
+                <p><strong>Total Rows:</strong> ${data.length} | <strong>Columns:</strong> ${columns.length}</p>
+                <div class="data-preview">
+                    <table class="data-table">
+                        <thead>
+                            <tr>${columns.map(col => `<th>${col}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>
+                            ${previewData.map(row => 
+                                `<tr>${columns.map(col => `<td>${row[col] || ''}</td>`).join('')}</tr>`
+                            ).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                ${data.length > 10 ? `<p><em>Showing first 10 rows of ${data.length} total rows</em></p>` : ''}
+            `;
+
+            previewDiv.innerHTML = html;
+            preview.style.display = 'block';
+        }
+
+        function setupChartControls(data) {
+            if (data.length === 0) return;
+
+            const columns = Object.keys(data[0]);
+            const xAxisSelect = document.getElementById('xAxis');
+            const yAxisSelect = document.getElementById('yAxis');
+
+            // Clear previous options
+            xAxisSelect.innerHTML = '';
+            yAxisSelect.innerHTML = '';
+
+            columns.forEach(column => {
+                xAxisSelect.innerHTML += `<option value="${column}">${column}</option>`;
+                yAxisSelect.innerHTML += `<option value="${column}">${column}</option>`;
+            });
+
+            // Set default selections
+            if (columns.length > 1) {
+                yAxisSelect.selectedIndex = 1;
+            }
+
+            document.getElementById('chartControls').style.display = 'block';
+        }
+
+        function generateChart() {
+            const xAxis = document.getElementById('xAxis').value;
+            const yAxis = document.getElementById('yAxis').value;
+            const chartType = document.getElementById('chartType').value;
+
+            if (!xAxis || !yAxis || currentData.length === 0) {
+                alert('Please select X and Y axes and ensure data is loaded.');
+                return;
+            }
+
+            const chartDisplay = document.getElementById('chartDisplay');
+            chartDisplay.style.display = 'block';
+
+            if (chartType.startsWith('3d')) {
+                generate3DChart(xAxis, yAxis, chartType);
+            } else {
+                generate2DChart(xAxis, yAxis, chartType);
+            }
+
+            // Update analytics
+            analytics.charts++;
+            localStorage.setItem('analytics', JSON.stringify(analytics));
+            updateDashboard();
+        }
+
+        function generate2DChart(xAxis, yAxis, chartType) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            document.getElementById('plotlyChart').style.display = 'none';
+            document.getElementById('myChart').style.display = 'block';
+
+            // Destroy existing chart
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            // Prepare data
+            const labels = currentData.map(row => row[xAxis]);
+            const values = currentData.map(row => parseFloat(row[yAxis]) || 0);
+
+            const chartConfig = {
+                type: chartType === 'area' ? 'line' : chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${yAxis} vs ${xAxis}`,
+                        data: values,
+                        backgroundColor: chartType === 'pie' ? 
+                            generateColors(values.length) : 
+                            'rgba(102, 126, 234, 0.2)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        fill: chartType === 'area'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${yAxis} vs ${xAxis}`
+                        },
+                        legend: {
+                            display: chartType === 'pie'
+                        }
+                    },
+                    scales: chartType !== 'pie' ? {
+                        y: {
+                            beginAtZero: true
+                        }
+                    } : undefined
+                }
+            };
+
+            currentChart = new Chart(ctx, chartConfig);
+        }
+
+        function generate3DChart(xAxis, yAxis, chartType) {
+            document.getElementById('myChart').style.display = 'none';
+            const plotlyDiv = document.getElementById('plotlyChart');
+            plotlyDiv.style.display = 'block';
+
+            const xValues = currentData.map(row => row[xAxis]);
+            const yValues = currentData.map(row => parseFloat(row[yAxis]) || 0);
+            const zValues = currentData.map((row, index) => index); // Use index as Z for demo
+
+            let trace, layout;
+
+            if (chartType === '3d-scatter') {
+                trace = {
+                    x: xValues,
+                    y: yValues,
+                    z: zValues,
+                    mode: 'markers',
+                    marker: {
+                        size: 8,
+                        color: yValues,
+                        colorscale: 'Viridis'
+                    },
+                    type: 'scatter3d'
+                };
+
+                layout = {
+                    title: `3D Scatter: ${yAxis} vs ${xAxis}`,
+                    scene: {
+                        xaxis: { title: xAxis },
+                        yaxis: { title: yAxis },
+                        zaxis: { title: 'Index' }
+                    }
+                };
+            } else if (chartType === '3d-surface') {
+                // Create a simple surface plot
+                const size = Math.min(10, Math.sqrt(currentData.length));
+                const x = [], y = [], z = [];
+                
+                for (let i = 0; i < size; i++) {
+                    x.push(i);
+                    y.push(i);
+                    z.push([]);
+                    for (let j = 0; j < size; j++) {
+                        const index = i * size + j;
+                        z[i].push(index < yValues.length ? yValues[index] : 0);
+                    }
+                }
+
+                trace = {
+                    x: x,
+                    y: y,
+                    z: z,
+                    type: 'surface',
+                    colorscale: 'Viridis'
+                };
+
+                layout = {
+                    title: `3D Surface: ${yAxis} Distribution`,
+                    scene: {
+                        xaxis: { title: 'X Grid' },
+                        yaxis: { title: 'Y Grid' },
+                        zaxis: { title: yAxis }
+                    }
+                };
+            }
+
+            Plotly.newPlot(plotlyDiv, [trace], layout);
+        }
+
+        function generateColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const hue = (i * 360 / count) % 360;
+                colors.push(`hsl(${hue}, 70%, 60%)`);
+            }
+            return colors;
+        }
+
+        function generateAIInsights() {
+            const insightsDiv = document.getElementById('aiInsights');
+            const contentDiv = document.getElementById('insightsContent');
+            
+            // Simulate AI analysis (in real implementation, this would call an AI API)
+            const insights = analyzeData(currentData);
+            
+            contentDiv.innerHTML = `
+                <h3>🔍 Data Analysis Summary</h3>
+                ${insights.map(insight => `<p>• ${insight}</p>`).join('')}
+                <p><em>💡 These insights are generated using statistical analysis. In a production environment, this would integrate with AI APIs like OpenAI GPT or Google's Vertex AI for more sophisticated analysis.</em></p>
+            `;
+            
+            insightsDiv.style.display = 'block';
+            
+            // Update analytics
+            analytics.insights++;
+            localStorage.setItem('analytics', JSON.stringify(analytics));
+            updateDashboard();
+        }
+
+        function analyzeData(data) {
+            if (!data || data.length === 0) return ['No data available for analysis.'];
+            
+            const insights = [];
+            const columns = Object.keys(data[0]);
+            
+            insights.push(`Dataset contains ${data.length} rows and ${columns.length} columns.`);
+            
+            // Analyze numeric columns
+            const numericColumns = columns.filter(col => {
+                return data.some(row => !isNaN(parseFloat(row[col])));
+            });
+            
+            if (numericColumns.length > 0) {
+                insights.push(`Found ${numericColumns.length} numeric columns: ${numericColumns.join(', ')}.`);
+                
+                numericColumns.forEach(col => {
+                    const values = data.map(row => parseFloat(row[col])).filter(v => !isNaN(v));
+                    if (values.length > 0) {
+                        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+                        const max = Math.max(...values);
+                        const min = Math.min(...values);
+                        insights.push(`${col}: Average = ${avg.toFixed(2)}, Range = ${min} to ${max}.`);
+                    }
+                });
+            }
+            
+            // Analyze categorical columns
+            const categoricalColumns = columns.filter(col => !numericColumns.includes(col));
+            if (categoricalColumns.length > 0) {
+                insights.push(`Found ${categoricalColumns.length} categorical columns with unique values distributions.`);
+            }
+            
+            return insights;
+        }
+
+        function downloadChart() {
+            if (currentChart) {
+                const link = document.createElement('a');
+                link.download = 'chart.png';
+                link.href = currentChart.toBase64Image();
+                link.click();
+            } else if (document.getElementById('plotlyChart').style.display !== 'none') {
+                // Download Plotly chart
+                Plotly.downloadImage('plotlyChart', {
+                    format: 'png',
+                    width: 800,
+                    height: 600,
+                    filename: 'chart'
+                });
+            }
+        }
+
+        function saveAnalysis() {
+            const xAxis = document.getElementById('xAxis').value;
+            const yAxis = document.getElementById('yAxis').value;
+            const chartType = document.getElementById('chartType').value;
+            
+            const analysis = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                xAxis: xAxis,
+                yAxis: yAxis,
+                chartType: chartType,
+                dataPoints: currentData.length
+            };
+            
+            // Find the most recent upload and add this analysis to it
+            if (uploadHistory.length > 0) {
+                if (!uploadHistory[0].analyses) {
+                    uploadHistory[0].analyses = [];
+                }
+                uploadHistory[0].analyses.push(analysis);
+                localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
+                updateHistory();
+                alert('Analysis saved successfully!');
+            }
+        }
+
+        function updateDashboard() {
+            document.getElementById('totalFiles').textContent = analytics.files;
+            document.getElementById('totalCharts').textContent = analytics.charts;
+            document.getElementById('totalRows').textContent = analytics.rows.toLocaleString();
+            document.getElementById('totalInsights').textContent = analytics.insights;
+            
+            // Update recent activity
+            const recentDiv = document.getElementById('recentActivity');
+            const recentItems = uploadHistory.slice(0, 5);
+            
+            if (recentItems.length === 0) {
+                recentDiv.innerHTML = '<p>No recent activity. Upload your first Excel file to get started!</p>';
+                return;
+            }
+            
+            recentDiv.innerHTML = recentItems.map(item => `
+                <div class="history-item">
+                    <h4>📁 ${item.fileName}</h4>
+                    <p>Uploaded: ${new Date(item.uploadDate).toLocaleString()}</p>
+                    <p>Rows: ${item.rowCount} | Columns: ${item.columns.length}</p>
+                    ${item.analyses ? `<p>Charts: ${item.analyses.length}</p>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function updateHistory() {
+            const historyDiv = document.getElementById('historyList');
+            
+            if (uploadHistory.length === 0) {
+                historyDiv.innerHTML = '<p>No upload history yet. Start by uploading an Excel file!</p>';
+                return;
+            }
+            
+            historyDiv.innerHTML = uploadHistory.map(item => `
+                <div class="history-item">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h3>📁 ${item.fileName}</h3>
+                            <p><strong>Upload Date:</strong> ${new Date(item.uploadDate).toLocaleString()}</p>
+                            <p><strong>Data:</strong> ${item.rowCount} rows, ${item.columns.length} columns</p>
+                            <p><strong>Columns:</strong> ${item.columns.join(', ')}</p>
+                            ${item.analyses ? `
+                                <div style="margin-top: 15px;">
+                                    <h4>📊 Generated Charts (${item.analyses.length}):</h4>
+                                    ${item.analyses.map(analysis => `
+                                        <div style="background: rgba(102, 126, 234, 0.1); padding: 10px; margin: 5px 0; border-radius: 8px;">
+                                            <strong>${analysis.chartType}</strong>: ${analysis.yAxis} vs ${analysis.xAxis}
+                                            <br><small>Created: ${new Date(analysis.timestamp).toLocaleString()}</small>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div>
+                            <button class="btn btn-secondary" onclick="deleteHistoryItem(${item.id})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteHistoryItem(id) {
+            if (confirm('Are you sure you want to delete this history item?')) {
+                uploadHistory = uploadHistory.filter(item => item.id !== id);
+                localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
+                updateHistory();
+                updateDashboard();
+            }
+        }
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab button
+            event.target.classList.add('active');
+            
+            // Update data when switching to dashboard or admin
+            if (tabName === 'dashboard') {
+                updateDashboard();
+            } else if (tabName === 'admin') {
+                updateAdminPanel();
+            } else if (tabName === 'history') {
+                updateHistory();
+            }
+        }
+
+        function updateAdminPanel() {
+            // Simulate admin statistics
+            const totalStorage = uploadHistory.reduce((total, item) => total + (item.rowCount * 0.001), 0);
+            
+            document.getElementById('totalUsers').textContent = '1';
+            document.getElementById('totalStorage').textContent = totalStorage.toFixed(2);
+            document.getElementById('activeUsers').textContent = '1';
+            document.getElementById('apiCalls').textContent = analytics.insights;
+        }
+
+        // Utility function to clear all data (for demo purposes)
+        function clearAllData() {
+            if (confirm('This will clear all uploaded data and history. Are you sure?')) {
+                uploadHistory = [];
+                analytics = {files: 0, charts: 0, rows: 0, insights: 0};
+                localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
+                localStorage.setItem('analytics', JSON.stringify(analytics));
+                
+                // Hide analysis sections
+                document.getElementById('dataPreview').style.display = 'none';
+                document.getElementById('chartControls').style.display = 'none';
+                document.getElementById('chartDisplay').style.display = 'none';
+                document.getElementById('aiInsights').style.display = 'none';
+                
+                updateDashboard();
+                updateHistory();
+                
+                alert('All data cleared successfully!');
+            }
+        }
+
+        // Sample data generator for demo purposes
+        function generateSampleData() {
+            const sampleData = [
+                {Month: 'Jan', Sales: 12000, Expenses: 8000, Profit: 4000},
+                {Month: 'Feb', Sales: 15000, Expenses: 9000, Profit: 6000},
+                {Month: 'Mar', Sales: 18000, Expenses: 11000, Profit: 7000},
+                {Month: 'Apr', Sales: 14000, Expenses: 8500, Profit: 5500},
+                {Month: 'May', Sales: 20000, Expenses: 12000, Profit: 8000},
+                {Month: 'Jun', Sales: 22000, Expenses: 13000, Profit: 9000},
+                {Month: 'Jul', Sales: 25000, Expenses: 15000, Profit: 10000},
+                {Month: 'Aug', Sales: 23000, Expenses: 14000, Profit: 9000},
+                {Month: 'Sep', Sales: 21000, Expenses: 13500, Profit: 7500},
+                {Month: 'Oct', Sales: 19000, Expenses: 12000, Profit: 7000},
+                {Month: 'Nov', Sales: 24000, Expenses: 14500, Profit: 9500},
+                {Month: 'Dec', Sales: 28000, Expenses: 16000, Profit: 12000}
+            ];
+            
+            currentData = sampleData;
+            displayDataPreview(sampleData, 'Sample_Business_Data.xlsx');
+            setupChartControls(sampleData);
+            
+            // Add to history
+            const historyEntry = {
+                id: Date.now(),
+                fileName: 'Sample_Business_Data.xlsx',
+                uploadDate: new Date().toISOString(),
+                rowCount: sampleData.length,
+                columns: Object.keys(sampleData[0])
+            };
+            
+            uploadHistory.unshift(historyEntry);
+            localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
+            
+            analytics.files++;
+            analytics.rows += sampleData.length;
+            localStorage.setItem('analytics', JSON.stringify(analytics));
+            
+            updateDashboard();
+            updateHistory();
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        switchTab('upload');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        switchTab('dashboard');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        switchTab('history');
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        switchTab('admin');
+                        break;
+                }
+            }
+        });
+
+        // Add some sample data button for demo
+        setTimeout(() => {
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.innerHTML += `
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px dashed #dee2e6;">
+                    <button class="btn btn-secondary" onclick="generateSampleData()" style="margin-right: 10px;">
+                        📊 Load Sample Data
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearAllData()">
+                        🗑️ Clear All Data
+                    </button>
+                </div>
+            `;
+        }, 1000);
+
+        // Auto-save feature
+        setInterval(() => {
+            localStorage.setItem('uploadHistory', JSON.stringify(uploadHistory));
+            localStorage.setItem('analytics', JSON.stringify(analytics));
+        }, 30000); // Save every 30 seconds
+
+        // Welcome message for first-time users
+        if (uploadHistory.length === 0 && analytics.files === 0) {
+            setTimeout(() => {
+                alert('🎉 Welcome to Excel Analytics Platform!\n\n✨ Features:\n• Upload Excel files (.xls/.xlsx)\n• Generate 2D & 3D charts\n• AI-powered insights\n• Download & save analyses\n• Track upload history\n\n🚀 Try the "Load Sample Data" button to see it in action!');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
