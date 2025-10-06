@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Excel Analytics Platform</title>
+	<!-- External libraries -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.18.0/plotly.min.js"></script>
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<div class="container">
+		<div class="header">
+			<h1>📊 Excel Analytics Platform</h1>
+			<p>Upload, Analyze, Visualize - Transform your Excel data into powerful insights</p>
+            
+			<div style="position: absolute; right: 40px; top: 30px;">
+				<button class="btn btn-primary" id="btnSignIn">Sign In</button>
+				<button class="btn btn-secondary" id="btnRegister">Register</button>
+			</div>
+
+			<div class="nav-tabs">
+				<button class="tab-btn active" id="tabUpload">📤 Upload & Analyze</button>
+				<button class="tab-btn" id="tabDashboard">📈 Dashboard</button>
+				<button class="tab-btn" id="tabHistory">📋 History</button>
+				<button class="tab-btn" id="tabAdmin">⚙️ Admin Panel</button>
+			</div>
+		</div>
+
+		<!-- Upload & Analyze Tab -->
+		<div id="upload" class="tab-content active">
+			<div class="card">
+				<h2>📁 Upload Excel File</h2>
+				<div class="upload-area" id="uploadArea">
+					<div style="font-size: 3em; margin-bottom: 20px;">📊</div>
+					<h3>Drag & Drop your Excel file here</h3>
+					<p>or click to browse (.xls, .xlsx supported)</p>
+					<input type="file" id="fileInput" class="file-input" accept=".xls,.xlsx" multiple>
+					<button class="btn btn-primary" id="btnChooseFiles">
+						Choose Files
+					</button>
+				</div>
+			</div>
+
+			<div class="loading" id="loading">
+				<div class="spinner"></div>
+				<p>Processing your Excel file...</p>
+			</div>
+
+			<div class="card" id="dataPreview" style="display: none;">
+				<h2>📋 Data Preview</h2>
+				<div id="previewContent"></div>
+			</div>
+
+			<div class="card" id="chartControls" style="display: none;">
+				<h2>📊 Chart Configuration</h2>
+				<div class="grid">
+					<div class="form-group">
+						<label for="xAxis">X-Axis Column:</label>
+						<select id="xAxis" class="form-control"></select>
+					</div>
+					<div class="form-group">
+						<label for="yAxis">Y-Axis Column:</label>
+						<select id="yAxis" class="form-control"></select>
+					</div>
+					<div class="form-group">
+						<label for="chartType">Chart Type:</label>
+						<select id="chartType" class="form-control">
+							<option value="line">Line Chart</option>
+							<option value="bar">Bar Chart</option>
+							<option value="scatter">Scatter Plot</option>
+							<option value="pie">Pie Chart</option>
+							<option value="area">Area Chart</option>
+							<option value="3d-scatter">3D Scatter Plot</option>
+							<option value="3d-surface">3D Surface Plot</option>
+						</select>
+					</div>
+				</div>
+				<button class="btn btn-success" id="btnGenerateChart">🎨 Generate Chart</button>
+				<button class="btn btn-secondary" id="btnAIInsights">🤖 Get AI Insights</button>
+			</div>
+
+			<div class="card" id="chartDisplay" style="display: none;">
+				<h2>📈 Generated Chart</h2>
+				<div class="chart-container">
+					<canvas id="myChart"></canvas>
+					<div id="plotlyChart"></div>
+				</div>
+				<button class="btn btn-primary" id="btnDownloadChart">💾 Download Chart</button>
+				<button class="btn btn-secondary" id="btnSaveAnalysis">💿 Save Analysis</button>
+			</div>
+
+			<div class="insight-card" id="aiInsights" style="display: none;">
+				<h2>🤖 AI-Powered Insights</h2>
+				<div id="insightsContent"></div>
+			</div>
+		</div>
+
+		<!-- Dashboard Tab -->
+		<div id="dashboard" class="tab-content">
+			<div class="card">
+				<h2>📊 Analytics Dashboard</h2>
+				<div class="stats-grid">
+					<div class="stat-card">
+						<div class="stat-number" id="totalFiles">0</div>
+						<div>Files Uploaded</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-number" id="totalCharts">0</div>
+						<div>Charts Generated</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-number" id="totalRows">0</div>
+						<div>Data Rows Processed</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-number" id="totalInsights">0</div>
+						<div>AI Insights Generated</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="card">
+				<h2>📈 Recent Activity</h2>
+				<div id="recentActivity"></div>
+			</div>
+		</div>
+
+		<!-- History Tab -->
+		<div id="history" class="tab-content">
+			<div class="card">
+				<h2>📋 Upload History</h2>
+				<div id="historyList"></div>
+			</div>
+		</div>
+
+		<!-- Admin Panel Tab -->
+		<div id="admin" class="tab-content">
+			<div class="card admin-panel">
+				<h2>⚙️ Admin Panel</h2>
+				<div class="stats-grid">
+					<div class="stat-card">
+						<div class="stat-number" id="totalUsers">1</div>
+						<div>Total Users</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-number" id="totalStorage">0</div>
+						<div>Storage Used (MB)</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-number" id="activeUsers">1</div>
+						<div>Active Users</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-number" id="apiCalls">0</div>
+						<div>API Calls Today</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="card">
+				<h2>👥 User Management</h2>
+				<div id="usersList">
+					<div class="user-card">
+						<div>
+							<strong>Current User</strong><br>
+							<small>user@example.com</small>
+						</div>
+						<div>
+							<span class="btn btn-success">Active</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="script.js"></script>
+
+	<!-- Auth forms -->
+	<div id="authModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+		<div style="background:white; padding:20px; width:360px; border-radius:8px; margin:auto;">
+			<div id="authContent">
+				<!-- Filled by script -->
+			</div>
+			<div style="text-align:right; margin-top:10px;">
+				<button class="btn btn-secondary" id="authClose">Close</button>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
