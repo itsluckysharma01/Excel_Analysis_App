@@ -1,4 +1,4 @@
-# Excel Analytics Platform — Interactive Guide
+# ✨✨ Excel Analytics Platform ✨✨
 
 This repository contains a lightweight, browser-first analytics UI for exploring Excel (.xls/.xlsx) files plus a Node/Express backend that provides user authentication and persistence for upload metadata and analyses using MongoDB.
 
